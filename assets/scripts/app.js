@@ -10,13 +10,38 @@ class HTTPRequest {
       const req = new XMLHttpRequest();
       
       if (this.responseType) { 
-        req.responseType = this.responseType 
+        req.responseType = this.responseType;
       };
 
       req.open(this.type, this.url);
       req.onload = () => resolve(req.response);
       req.onerror = () => reject(req);
       req.send();
+    });
+  }
+}
+
+class Form {
+  init() {
+    const addPostBtn = document.querySelector('#new-post button');
+
+    addPostBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      
+      const req = new HTTPRequest('POST', 'https://jsonplaceholder.typicode.com/posts');
+
+      req.execute()
+        .then(response => {
+          const title = document.getElementById('title').value;
+          const content = document.getElementById('content').value;
+          const post = new Post(title, content);
+          console.log(post);
+
+          const postLi = new PostItem(post);
+        })
+        // .catch(() => {
+        //   console.log('There was a problem submitting the post.');
+        // });
     });
   }
 }
@@ -29,7 +54,7 @@ class PostSection {
       const req = new HTTPRequest('GET', 'https://jsonplaceholder.typicode.com/posts', 'json');
 
       req.execute()
-        .then((response) => {
+        .then(response => {
           document.querySelectorAll('#available-posts li').forEach(li => {
             li.remove();
           });
@@ -52,17 +77,17 @@ class PostList {
     const postUl = document.querySelector('#available-posts .posts');
 
     this.posts.forEach(postData => {
-      const postLi = new PostElement(postData).render();
+      const postLi = new PostItem(postData).render();
       postUl.append(postLi);
     });
   }
 }
 
-class PostElement {
+class PostItem {
   constructor(postData) {
     this.id = postData.id;
     this.title = postData.title;
-    this.body = postData.body;
+    this.content = postData.content;
   }
 
   render() {
@@ -72,7 +97,7 @@ class PostElement {
     postLi.classList.add('post-item');
     postLi.innerHTML = `
       <h2>${this.title}</h2>
-      <p>${this.body}</p>
+      <p>${this.content}</p>
       <button>DELETE</button>
     `;
 
@@ -84,7 +109,7 @@ class PostElement {
           document.querySelector(`[data-id="${this.id}"]`).remove();
         })
         .catch(() => {
-          console.log('There was a problem deleting the post.')
+          console.log('There was a problem deleting the post.');
         });
     });
 
@@ -92,8 +117,16 @@ class PostElement {
   }
 }
 
+class Post {
+  constructor(title, body) {
+    this.title = title;
+    this.body = body;
+  }
+}
+
 class App {
   static init() {  
+    new Form().init();
     new PostSection().init();
   }
 }
