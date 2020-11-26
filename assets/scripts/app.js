@@ -21,6 +21,13 @@ class HTTPRequest {
   }
 }
 
+class Post {
+  constructor(title, body) {
+    this.title = title;
+    this.body = body;
+  }
+}
+
 class Form {
   init() {
     const addPostBtn = document.querySelector('#new-post button');
@@ -32,16 +39,19 @@ class Form {
 
       req.execute()
         .then(response => {
-          const title = document.getElementById('title').value;
-          const content = document.getElementById('content').value;
-          const post = new Post(title, content);
-          console.log(post);
-
-          const postLi = new PostItem(post);
+          const titleInput = document.getElementById('title');
+          const bodyInput = document.getElementById('body');
+          const post = new Post(titleInput.value, bodyInput.value);
+          const postItem = new PostItem(post);
+          const postUl = document.querySelector('#available-posts .posts');
+          
+          postUl.prepend(postItem.render());
+          titleInput.value = null;
+          bodyInput.value = null;
         })
-        // .catch(() => {
-        //   console.log('There was a problem submitting the post.');
-        // });
+        .catch(() => {
+          console.log('There was a problem submitting the post.');
+        });
     });
   }
 }
@@ -55,11 +65,17 @@ class PostSection {
 
       req.execute()
         .then(response => {
+          const posts = [];
+
+          response.forEach(post => {
+            posts.push(post);
+          });
+
           document.querySelectorAll('#available-posts li').forEach(li => {
             li.remove();
           });
 
-          new PostList(response).render();
+          new PostList(posts).render();
         })
         .catch(() => {
           console.log('Could not load posts');
@@ -70,24 +86,27 @@ class PostSection {
 
 class PostList {
   constructor(posts) {
-    this.posts = posts;  
+    this.posts = posts;
+    this.postUl = document.querySelector('#available-posts .posts');
+  }
+
+  add(postLi) {
+    this.postUl.prepend(postLi);
   }
 
   render() {
-    const postUl = document.querySelector('#available-posts .posts');
-
-    this.posts.forEach(postData => {
-      const postLi = new PostItem(postData).render();
-      postUl.append(postLi);
+    this.posts.forEach(post => {
+      const postLi = new PostItem(post).render();
+      this.postUl.append(postLi);
     });
   }
 }
 
 class PostItem {
-  constructor(postData) {
-    this.id = postData.id;
-    this.title = postData.title;
-    this.content = postData.content;
+  constructor(post) {
+    this.id = post.id;
+    this.title = post.title;
+    this.body = post.body;
   }
 
   render() {
@@ -97,7 +116,7 @@ class PostItem {
     postLi.classList.add('post-item');
     postLi.innerHTML = `
       <h2>${this.title}</h2>
-      <p>${this.content}</p>
+      <p>${this.body}</p>
       <button>DELETE</button>
     `;
 
@@ -117,17 +136,10 @@ class PostItem {
   }
 }
 
-class Post {
-  constructor(title, body) {
-    this.title = title;
-    this.body = body;
-  }
-}
-
 class App {
   static init() {  
-    new Form().init();
-    new PostSection().init();
+    this.form = new Form().init();
+    this.postSection = new PostSection().init();
   }
 }
 
