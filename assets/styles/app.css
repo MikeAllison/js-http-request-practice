@@ -52,11 +52,22 @@ textarea:focus {
 }
 
 section {
-  width: 40rem;
-  max-width: 90%;
   margin: 2rem auto;
   border: 1px solid #ccc;
   padding: 1.5rem;
+}
+
+.container {
+  width: 45%;
+  padding: 1.5rem;
+}
+
+.float-left {
+  float: left;
+}
+
+.float-right {
+  float: right;
 }
 
 .form-control {

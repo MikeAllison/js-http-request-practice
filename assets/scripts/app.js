@@ -30,14 +30,20 @@ class Post {
 }
 
 class Form {
+  constructor(renderHook, postSectionHook) {
+    this.renderHook = renderHook;
+    this.postSectionHook = postSectionHook;
+  }
+
   init() {
-    const addPostBtn = document.querySelector('#new-post button');
+    const addPostBtn = document.querySelector(`#${this.renderHook} button`);
 
     addPostBtn.addEventListener('click', (event) => {
       event.preventDefault();
+      
+      const titleInput = document.querySelector(`#${this.renderHook} #title`);
+      const bodyInput = document.querySelector(`#${this.renderHook} #body`);
 
-      const titleInput = document.getElementById('title');
-      const bodyInput = document.getElementById('body');
       const reqData = {
         title: titleInput.value,
         body: bodyInput.value
@@ -48,8 +54,8 @@ class Form {
       req.execute()
         .then(response => {
           const post = new Post(titleInput.value, bodyInput.value);
-          const postItem = new PostItem(post);
-          const postUl = document.querySelector('#available-posts .posts');
+          const postItem = new PostItem(this.renderHook, post);
+          const postUl = document.querySelector(`#${this.postSectionHook} .posts`);
           
           postUl.prepend(postItem.render());
           titleInput.value = null;
@@ -63,8 +69,12 @@ class Form {
 }
 
 class PostSection {
+  constructor(renderHook) {
+    this.renderHook = renderHook;
+  }
+
   init() {
-    const fetchPostsBtn = document.querySelector('#available-posts button');
+    const fetchPostsBtn = document.querySelector(`#${this.renderHook} button`);
 
     fetchPostsBtn.addEventListener('click', () => {
       const req = new HTTPRequest('GET', 'https://jsonplaceholder.typicode.com/posts', 'json');
@@ -77,11 +87,11 @@ class PostSection {
             posts.push(post);
           });
 
-          document.querySelectorAll('#available-posts li').forEach(li => {
+          document.querySelectorAll(`#${this.renderHook} li`).forEach(li => {
             li.remove();
           });
 
-          new PostList(posts).render();
+          new PostList(this.renderHook, posts).render();
         })
         .catch(() => {
           console.log('Could not load posts');
@@ -91,9 +101,10 @@ class PostSection {
 }
 
 class PostList {
-  constructor(posts) {
+  constructor(renderHook, posts) {
+    this.renderHook = renderHook;
     this.posts = posts;
-    this.postUl = document.querySelector('#available-posts .posts');
+    this.postUl = document.querySelector(`#${this.renderHook} .posts`);
   }
 
   add(postLi) {
@@ -102,23 +113,21 @@ class PostList {
 
   render() {
     this.posts.forEach(post => {
-      const postLi = new PostItem(post).render();
+      const postLi = new PostItem(this.renderHook, post).render();
       this.postUl.append(postLi);
     });
   }
 }
 
 class PostItem {
-  constructor(post) {
-    this.id = post.id;
+  constructor(renderHook, post) {
+    this.renderHook = renderHook;
     this.title = post.title;
     this.body = post.body;
   }
 
   render() {
     const postLi = document.createElement('li');
-    
-    postLi.setAttribute('data-id', this.id);
     postLi.classList.add('post-item');
     postLi.innerHTML = `
       <h2>${this.title}</h2>
@@ -131,7 +140,7 @@ class PostItem {
       
       req.execute()
         .then(() => {
-          document.querySelector(`[data-id="${this.id}"]`).remove();
+          postLi.remove();
         })
         .catch(() => {
           console.log('There was a problem deleting the post.');
@@ -143,9 +152,13 @@ class PostItem {
 }
 
 class App {
-  static init() {  
-    this.form = new Form().init();
-    this.postSection = new PostSection().init();
+  static init() {
+    // Fetch API
+    new Form('new-post-fetch', 'available-posts-fetch').init();
+    new PostSection('available-posts-fetch').init();
+    // XMLHttpRequest
+    new Form('new-post-xml', 'available-posts-xml').init();
+    new PostSection('available-posts-xml').init();
   }
 }
 
