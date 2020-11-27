@@ -1,8 +1,9 @@
 class HTTPRequest {
-  constructor(type, url, responseType) {
+  constructor(type, url, responseType, data) {
     this.type = type;
     this.url = url;
     this.responseType = responseType;
+    this.data = data;
   }
 
   execute() {
@@ -16,7 +17,7 @@ class HTTPRequest {
       req.open(this.type, this.url);
       req.onload = () => resolve(req.response);
       req.onerror = () => reject(req);
-      req.send();
+      req.send(JSON.stringify(this.data));
     });
   }
 }
@@ -34,13 +35,18 @@ class Form {
 
     addPostBtn.addEventListener('click', (event) => {
       event.preventDefault();
+
+      const titleInput = document.getElementById('title');
+      const bodyInput = document.getElementById('body');
+      const reqData = {
+        title: titleInput.value,
+        body: bodyInput.value
+      };
       
-      const req = new HTTPRequest('POST', 'https://jsonplaceholder.typicode.com/posts');
+      const req = new HTTPRequest('POST', 'https://jsonplaceholder.typicode.com/posts', null, reqData);
 
       req.execute()
         .then(response => {
-          const titleInput = document.getElementById('title');
-          const bodyInput = document.getElementById('body');
           const post = new Post(titleInput.value, bodyInput.value);
           const postItem = new PostItem(post);
           const postUl = document.querySelector('#available-posts .posts');
@@ -121,7 +127,7 @@ class PostItem {
     `;
 
     postLi.querySelector('button').addEventListener('click', () => {
-      const req = new HTTPRequest('DELETE', 'https://jsonplaceholder.typicode.com/posts/1');
+      const req = new HTTPRequest('DELETE', `https://jsonplaceholder.typicode.com/posts/${this.id}`);
       
       req.execute()
         .then(() => {
