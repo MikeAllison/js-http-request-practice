@@ -211,7 +211,6 @@ class FetchReqPostItem extends PostItem {
     `;
 
     postLi.querySelector('button').addEventListener('click', () => {
-      console.log(this);
       fetch(`https://jsonplaceholder.typicode.com/posts/${this.id}`, {
         method: 'DELETE'
       })
